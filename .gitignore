@@ -1,0 +1,33 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Video and large files — no VODs / clips without authorization
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.pdf
+books/
+videos/
+clips/
+uploads/
+
+# System / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
