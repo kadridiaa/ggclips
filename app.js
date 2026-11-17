@@ -12,6 +12,8 @@ const search = document.querySelector('#search');
 const emptyState = document.querySelector('#empty-state');
 const toast = document.querySelector('#toast');
 const viewer = document.querySelector('#clip-viewer');
+const profile = document.querySelector('#streamer-profile');
+const platformByStreamer = { Noxx: 'Twitch', MilaRush: 'Kick', KyoLive: 'Twitch', LunaByte: 'Kick', SoraGG: 'Twitch', Rexouille: 'Kick' };
 let activeFilter = 'Tout';
 let toastTimer;
 
@@ -32,7 +34,7 @@ function renderClips() {
       </div>
       <div class="clip-meta">
         <span class="avatar" style="--avatar:${avatarColor(clip.id)}" aria-hidden="true">${clip.initial}</span>
-        <div class="creator"><strong>${clip.creator}</strong><span>${clip.time} · ${clip.views} vues</span></div>
+        <div class="creator"><button class="creator-link" type="button" data-streamer="${clip.creator}">${clip.creator}</button><span>${clip.time} · ${clip.views} vues</span></div>
         <div class="clip-actions">
           <button class="action-button" type="button" aria-label="Aimer ${clip.title}" data-action="like">♡ ${compactViews(clip.id)}</button>
           <button class="action-button" type="button" aria-label="Partager ${clip.title}" data-action="share">↗</button>
@@ -80,6 +82,12 @@ grid.addEventListener('click', async (event) => {
 });
 
 grid.addEventListener('click', (event) => {
+  const streamerButton = event.target.closest('[data-streamer]');
+  if (streamerButton) {
+    event.stopPropagation();
+    openProfile(streamerButton.dataset.streamer);
+    return;
+  }
   if (event.target.closest('button')) return;
   const card = event.target.closest('[data-clip]');
   if (!card) return;
@@ -91,7 +99,9 @@ function openViewer(clip) {
   document.querySelector('#viewer-duration').textContent = clip.duration;
   document.querySelector('#viewer-scene').textContent = clip.scene;
   document.querySelector('#viewer-title').textContent = clip.title;
-  document.querySelector('#viewer-creator').textContent = clip.creator;
+  const viewerCreator = document.querySelector('#viewer-creator');
+  viewerCreator.textContent = clip.creator;
+  viewerCreator.dataset.streamer = clip.creator;
   document.querySelector('#viewer-views').textContent = clip.views;
   document.querySelector('#viewer-likes').textContent = compactViews(clip.id);
   const avatar = document.querySelector('#viewer-avatar');
@@ -100,8 +110,34 @@ function openViewer(clip) {
   document.querySelector('#viewer-tags').innerHTML = clip.tags.map((tag) => `<span class="clip-tag">#${tag.toLocaleLowerCase('fr').replaceAll(' ', '')}</span>`).join('');
   viewer.hidden = false;
   viewer.setAttribute('aria-hidden', 'false');
+  profile.hidden = true;
+  profile.setAttribute('aria-hidden', 'true');
   document.body.classList.add('viewer-open');
   document.querySelector('#back-to-feed').focus();
+}
+
+function openProfile(streamerName) {
+  const streamerClips = clips.filter((clip) => clip.creator === streamerName);
+  if (!streamerClips.length) return;
+  const streamer = streamerClips[0];
+  const avatar = document.querySelector('#profile-avatar');
+  avatar.textContent = streamer.initial;
+  avatar.style.setProperty('--avatar', avatarColor(streamer.id));
+  document.querySelector('#profile-name').textContent = streamer.creator;
+  document.querySelector('#profile-platform').textContent = platformByStreamer[streamer.creator];
+  document.querySelector('#profile-count').textContent = streamerClips.length;
+  document.querySelector('#profile-clips').innerHTML = streamerClips.map((clip) => `
+    <button class="profile-clip" type="button" data-profile-clip="${clip.id}" aria-label="Ouvrir le clip : ${clip.title}">
+      <span class="profile-clip-art clip-art ${clip.art}" aria-hidden="true"><span class="art-glow"></span><span class="art-silhouette"></span><span class="duration">${clip.duration}</span></span>
+      <span class="profile-clip-copy"><strong>${clip.title}</strong><span>${clip.views} vues · ${compactViews(clip.id)} likes</span><span class="profile-tags">${clip.tags.map((tag) => `#${tag.toLocaleLowerCase('fr').replaceAll(' ', '')}`).join(' ')}</span></span>
+      <span class="profile-clip-arrow" aria-hidden="true">↗</span>
+    </button>`).join('');
+  viewer.hidden = true;
+  viewer.setAttribute('aria-hidden', 'true');
+  profile.hidden = false;
+  profile.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('viewer-open');
+  document.querySelector('#profile-back').focus();
 }
 
 function closeViewer() {
@@ -111,9 +147,24 @@ function closeViewer() {
 }
 
 document.querySelector('#back-to-feed').addEventListener('click', closeViewer);
+document.querySelector('#profile-back').addEventListener('click', () => {
+  profile.hidden = true;
+  profile.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('viewer-open');
+});
+document.querySelector('#viewer-creator').addEventListener('click', (event) => openProfile(event.currentTarget.dataset.streamer));
+document.querySelector('#profile-clips').addEventListener('click', (event) => {
+  const card = event.target.closest('[data-profile-clip]');
+  if (card) openViewer(clips.find((clip) => clip.id === Number(card.dataset.profileClip)));
+});
 document.querySelector('#report-clip').addEventListener('click', () => showToast('Le signalement n’est pas activé dans ce prototype.'));
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !viewer.hidden) closeViewer();
+  if (event.key === 'Escape' && !profile.hidden) {
+    profile.hidden = true;
+    profile.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('viewer-open');
+  }
 });
 
 const ageDialog = document.querySelector('#age-dialog');

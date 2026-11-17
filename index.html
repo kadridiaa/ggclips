@@ -72,12 +72,27 @@
           <div class="viewer-details">
             <span class="eyebrow accent">CLIP À LA UNE</span>
             <h2 id="viewer-title"></h2>
-            <div class="viewer-streamer"><span class="avatar" id="viewer-avatar"></span><div><strong id="viewer-creator"></strong><span>Streamer fictif</span></div></div>
+            <div class="viewer-streamer"><span class="avatar" id="viewer-avatar"></span><div><button class="creator-link viewer-creator-link" id="viewer-creator" type="button"></button><span>Streamer fictif · Profil fictif</span></div></div>
             <div class="viewer-stats"><div><strong id="viewer-views"></strong><span>vues</span></div><div><strong id="viewer-likes"></strong><span>likes fictifs</span></div></div>
             <div class="viewer-hashtags" id="viewer-tags" aria-label="Hashtags"></div>
             <button class="report-button" id="report-clip" type="button"><span aria-hidden="true">⚑</span> Signaler ce clip</button>
             <p class="report-note">Le signalement est désactivé dans ce prototype.</p>
           </div>
+        </div>
+      </section>
+      <section class="streamer-profile" id="streamer-profile" aria-label="Profil streamer" aria-hidden="true" hidden>
+        <header class="viewer-topbar">
+          <button class="back-button" id="profile-back" type="button"><span aria-hidden="true">←</span> Retour au feed</button>
+          <span class="viewer-demo-label">PROFIL FICTIF</span>
+        </header>
+        <div class="profile-content">
+          <div class="profile-hero">
+            <span class="avatar profile-avatar" id="profile-avatar"></span>
+            <div class="profile-identity"><span class="eyebrow accent">STREAMER</span><h2 id="profile-name"></h2><span class="platform-badge" id="profile-platform"></span></div>
+            <div class="profile-clip-count"><strong id="profile-count"></strong><span>clips</span></div>
+          </div>
+          <div class="profile-section-heading"><div><span class="eyebrow">À DÉCOUVRIR</span><h3>Ses clips</h3></div><span class="viewer-demo-label">CLIPS DE DÉMO</span></div>
+          <div class="profile-clips" id="profile-clips"></div>
         </div>
       </section>
     </div>
