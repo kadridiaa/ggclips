@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0a10" />
+    <meta name="description" content="GGClips — le feed de clips gaming. Prototype avec clips fictifs." />
+    <title>GGClips — Le meilleur du live, en court</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navigation principale">
+        <a class="brand" href="#accueil" aria-label="GGClips, accueil">
+          <span class="brand-mark">gg<span>.</span></span>
+          <span class="brand-name">GGCLIPS</span>
+        </a>
+        <nav class="main-nav">
+          <a class="nav-link active" href="#feed"><span class="nav-icon">▣</span> Le feed</a>
+          <a class="nav-link" href="#tendances"><span class="nav-icon">↗</span> Tendances</a>
+          <a class="nav-link" href="#streamers"><span class="nav-icon">◎</span> Streamers</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="sidebar-note"><span class="status-dot"></span> Prototype en cours</div>
+          <div class="sidebar-caption">Des moments live.<br />En format clip.</div>
+          <span class="version-label">GGCLIPS / BÊTA 0.1</span>
+        </div>
+      </aside>
+
+      <main id="feed" class="main-content">
+        <header class="topbar">
+          <div class="mobile-brand"><span class="brand-mark">gg<span>.</span></span></div>
+          <div class="topbar-title"><span class="eyebrow">LE MEILLEUR DU LIVE, EN COURT</span><h1>Le feed</h1></div>
+          <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Chercher un clip, un streamer…" aria-label="Chercher un clip ou streamer" /><kbd>/</kbd></label>
+          <button class="profile-button" type="button" aria-label="Profil invité">G</button>
+        </header>
+
+        <section class="feed-intro" aria-label="Présentation du feed">
+          <div><span class="eyebrow accent">SÉLECTION DU MOMENT</span><h2>Le chat n’était pas prêt.</h2><p>Les moments qui méritent un replay. Choisis ton prochain clip.</p></div>
+          <div class="intro-stat"><strong id="clip-count">06</strong><span>clips<br />à découvrir</span></div>
+        </section>
+
+        <section class="filters" aria-label="Filtres du feed">
+          <div class="filter-list" id="filter-list">
+            <button class="filter-chip selected" data-filter="Tout">Pour toi <span>✦</span></button>
+            <button class="filter-chip" data-filter="Action">Action</button>
+            <button class="filter-chip" data-filter="Drôle">Drôle</button>
+            <button class="filter-chip" data-filter="Moment clutch">Moment clutch</button>
+            <button class="filter-chip" data-filter="Fails">Fails</button>
+          </div>
+          <button class="sort-button" id="sort-button" type="button"><span>☷</span> Les + récents <span class="chevron">⌄</span></button>
+        </section>
+
+        <section class="clip-grid" id="clip-grid" aria-live="polite" aria-label="Clips fictifs"></section>
+        <p class="empty-state" id="empty-state" hidden>Aucun clip ne correspond à ta recherche. Essaie un autre mot.</p>
+        <footer class="page-footer"><span>© GGCLIPS — Prototype de démonstration</span><span>Clips et créateurs fictifs · Aucun stream réel</span></footer>
+      </main>
+    </div>
+
+    <dialog class="age-dialog" id="age-dialog" aria-labelledby="age-title">
+      <div class="age-mark">18<span>+</span></div>
+      <span class="eyebrow accent">AVANT DE CONTINUER</span>
+      <h2 id="age-title">Un espace pour les adultes.</h2>
+      <p>Ce prototype évoque un jeu destiné à un public adulte. Il ne vérifie pas ton identité ni ton âge.</p>
+      <button class="primary-button" id="age-confirm" type="button">J’ai 18 ans ou plus <span>→</span></button>
+      <button class="text-button" id="age-leave" type="button">Quitter cette page</button>
+      <small>Prototype d’interface · Toutes les scènes et personnes sont fictives.</small>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
