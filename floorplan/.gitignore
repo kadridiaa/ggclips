@@ -1,7 +1,2 @@
-# Keep the editable blueprint and shareable map in Git.
-# Leave generated internals, cache files, and the raw machine-specific map out.
+# Floorplan keeps its map out of git: this ignores everything in this folder, this file included.
 *
-!.gitignore
-!plan.json
-!architecture.json
-!ggclips-map.html

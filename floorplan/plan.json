@@ -5,7 +5,7 @@
     "Next.js mobile-first website and server routes",
     "Supabase Postgres and managed authentication",
     "Cloudflare Stream for approved clip video delivery",
-    "A small background worker for clip preparation",
+    "A small background worker with a role-based agent pipeline and FFmpeg editing",
     "Gemini API paid tier for assisted video analysis"
   ],
   "assumptions": [
@@ -14,6 +14,7 @@
     "Only a project editor can submit or approve media; visitors can browse and submit a rate-limited report without an account.",
     "Partners supply source files through a documented, approved route; no platform scraping or automatic VOD downloading is planned.",
     "The worker suggests clips and prepares drafts, but a human approves every publication.",
+    "The agent roles are coordinated steps with narrow responsibilities, not an unrestricted autonomous swarm; rights checks and final publication remain human-controlled.",
     "Gemini is a provisional paid-tier choice; partner footage is never sent to a free tier. Model quality, data terms, and cost must be validated before use.",
     "A managed video provider is proposed to avoid operating transcoding and delivery servers; costs and EU data-processing terms need review.",
     "The map describes a possible architecture, not existing code or a committed technology decision."
@@ -25,11 +26,11 @@
     },
     {
       "question": "What exact partner-approved route will provide video files, and what separate game/music rights clearance is required before processing?",
-      "about": ["POST /api/admin/sources", "worker.clip-preparation", "external.cloudflare-stream"]
+      "about": ["POST /api/admin/sources", "worker.permission-gate", "worker.orchestrator"]
     },
     {
       "question": "Should English subtitles and pages be included in the first public pilot, or added after French validation?",
-      "about": ["web.pages.home", "web.pages.clip", "worker.clip-preparation"]
+      "about": ["web.pages", "worker.caption-agent"]
     }
   ],
   "files": [
@@ -67,9 +68,15 @@
     { "path": "web/app/api/admin/clips/[id]/takedown/route.ts", "name": "Suspend a clip", "description": "Removes a clip from public surfaces and records the takedown decision.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
     { "path": "web/app/api/access/clip/[id]/route.ts", "name": "Check clip access", "description": "Applies the access rule selected for clips if member-only content is included.", "access": "signed-in", "who": "the requesting member", "data": ["external.supabase-db"] },
     { "path": "web/app/api/account/route.ts", "name": "Manage account request", "description": "Records an account closure or data request for the account owner.", "access": "signed-in", "who": "the account owner", "data": ["external.supabase-db"] },
-    { "path": "worker/src/clip-preparation.ts", "name": "Prepare clip drafts", "description": "Transcribes an authorized source, asks the model for candidate moments, and prepares draft renditions for human review.", "services": ["external.gemini", "external.cloudflare-stream"], "data": ["external.supabase-db", "external.supabase-storage"] },
-    { "path": "worker/src/quality-check.ts", "name": "Check draft quality", "description": "Checks media files, duration, captions, duplicate candidates, and required review fields before an editor sees a draft.", "data": ["external.supabase-db", "external.supabase-storage"] },
-    { "path": "worker/src/jobs.ts", "name": "Background job runner", "description": "Retries failed preparation work safely and prevents the same source from publishing twice.", "uses": ["worker/src/clip-preparation.ts", "worker/src/quality-check.ts"], "services": ["external.supabase-db"] },
+    { "path": "worker/src/clip-preparation.ts", "name": "Agent orchestrator", "description": "Runs the specialist clip agents in order, tracks each result, and stops at a human review gate before anything can publish.", "uses": ["worker/src/permission-gate.ts", "worker/src/moment-finder-agent.ts", "worker/src/caption-agent.ts", "worker/src/clip-editor.ts", "worker/src/safety-review-agent.ts", "worker/src/quality-check.ts"], "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/permission-gate.ts", "name": "Permission gate", "description": "Checks that a partner source has recorded permission for the intended processing before any AI service receives it.", "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/moment-finder-agent.ts", "name": "Moment finder agent", "description": "Reviews an authorized transcript and video to suggest interesting segments with timestamps and reasons.", "services": ["external.gemini"], "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/caption-agent.ts", "name": "Caption agent", "description": "Produces and aligns draft captions for a selected segment and marks uncertain words for human correction.", "services": ["external.gemini"], "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/clip-editor.ts", "name": "Clip editing tools", "description": "Cuts the selected segment, creates a vertical crop, and adds the approved caption and original GGClips visual treatment.", "services": ["external.ffmpeg"], "data": ["external.supabase-storage"] },
+    { "path": "worker/src/safety-review-agent.ts", "name": "Safety review agent", "description": "Flags possible violence, strong language, spoilers, personal information, and uncertain context for editor attention.", "services": ["external.gemini"], "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/quality-check.ts", "name": "Media quality checks", "description": "Runs predictable checks for file integrity, duration, captions, duplicate candidates, and required review fields.", "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/promotion-drafter-agent.ts", "name": "Promotion draft agent", "description": "Prepares platform-specific post drafts for an already approved clip; a person must publish them manually.", "services": ["external.gemini"], "data": ["external.supabase-db"] },
+    { "path": "worker/src/jobs.ts", "name": "Background job runner", "description": "Retries failed preparation work safely and prevents the same source from being processed or published twice.", "uses": ["worker/src/clip-preparation.ts", "worker/src/quality-check.ts", "worker/src/promotion-drafter-agent.ts"], "services": ["external.supabase-db"] },
     { "path": "web/lib/cookies.ts", "name": "Privacy choice handling", "description": "Stores the visitor's consent choices and gates non-essential embeds or trackers." }
   ],
   "endpoints": [

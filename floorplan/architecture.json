@@ -62,8 +62,72 @@
       "id": "worker",
       "label": "Clip preparation",
       "kind": "worker",
-      "summary": "Background work that turns authorized source videos into drafts for human review.",
+      "summary": "A role-based agent pipeline checks permissions, proposes moments, prepares clips and captions, and stops for human approval.",
       "paths": ["worker/**"]
+    },
+    {
+      "id": "worker.orchestrator",
+      "parent": "worker",
+      "label": "Agent orchestrator",
+      "kind": "feature",
+      "summary": "Runs each specialist role in order, tracks progress, and never publishes without an editor's approval.",
+      "paths": ["worker/src/clip-preparation.ts", "worker/src/jobs.ts"]
+    },
+    {
+      "id": "worker.permission-gate",
+      "parent": "worker",
+      "label": "Permission gate",
+      "kind": "feature",
+      "summary": "Checks partner permission and processing scope before a source is sent to any model.",
+      "paths": ["worker/src/permission-gate.ts"]
+    },
+    {
+      "id": "worker.moment-finder",
+      "parent": "worker",
+      "label": "Moment finder agent",
+      "kind": "feature",
+      "summary": "Finds candidate moments in an approved source and returns timestamps with reasons for an editor.",
+      "paths": ["worker/src/moment-finder-agent.ts"]
+    },
+    {
+      "id": "worker.captions",
+      "parent": "worker",
+      "label": "Caption agent",
+      "kind": "feature",
+      "summary": "Creates timed draft captions and marks words that need a person to check them.",
+      "paths": ["worker/src/caption-agent.ts"]
+    },
+    {
+      "id": "worker.editing",
+      "parent": "worker",
+      "label": "Clip editing tools",
+      "kind": "feature",
+      "summary": "Cuts, crops, and assembles the suggested segment into a vertical draft.",
+      "paths": ["worker/src/clip-editor.ts"]
+    },
+    {
+      "id": "worker.safety",
+      "parent": "worker",
+      "label": "Safety review agent",
+      "kind": "feature",
+      "summary": "Flags possible adult content, spoilers, private information, and uncertain context for human review.",
+      "paths": ["worker/src/safety-review-agent.ts"]
+    },
+    {
+      "id": "worker.quality",
+      "parent": "worker",
+      "label": "Media quality checks",
+      "kind": "feature",
+      "summary": "Checks that draft files, captions, timing, and required review details are present and usable.",
+      "paths": ["worker/src/quality-check.ts"]
+    },
+    {
+      "id": "worker.promotion",
+      "parent": "worker",
+      "label": "Promotion draft agent",
+      "kind": "feature",
+      "summary": "Writes optional social post drafts for approved clips; it does not publish to social accounts.",
+      "paths": ["worker/src/promotion-drafter-agent.ts"]
     },
     {
       "id": "external.supabase-db",
@@ -91,6 +155,13 @@
       "label": "Video analysis model",
       "kind": "external",
       "summary": "Proposed paid model service that suggests moments and timestamps from authorized videos.",
+      "tags": ["proposed"]
+    },
+    {
+      "id": "external.ffmpeg",
+      "label": "Video editing tools",
+      "kind": "external",
+      "summary": "Proposed media tools that cut and crop authorized source footage into review drafts.",
       "tags": ["proposed"]
     }
   ],
@@ -125,16 +196,24 @@
     },
     {
       "id": "prepare-authorized-clip",
-      "title": "Prepare an authorized clip",
-      "description": "A partner source becomes a draft, is checked by a person, and is published only after approval.",
+      "title": "Run the clip agents",
+      "description": "A permission gate passes an approved source to specialist agents; editing and quality tools prepare a draft; an editor decides what gets published.",
       "steps": [
         { "node": "web.admin", "note": "An editor registers a partner source and its permission evidence." },
-        { "node": "web.api", "note": "The protected route records the source and queues a preparation job." },
+        { "node": "web.api", "note": "The protected route records the source and starts a preparation job." },
         { "node": "external.supabase-storage", "note": "The source file remains in private storage." },
-        { "node": "worker", "note": "The worker transcribes, suggests moments, and prepares a review draft." },
-        { "node": "external.gemini", "note": "The model proposes possible moments; it does not decide rights or publish." },
-        { "node": "external.cloudflare-stream", "note": "A draft rendition is prepared for the editor to inspect." },
-        { "node": "web.admin", "note": "An editor checks context, rights, captions, framing, and content before approval." }
+        { "node": "worker.permission-gate", "note": "The permission gate confirms that this source may be processed before it reaches an AI model." },
+        { "node": "worker.orchestrator", "note": "The orchestrator assigns bounded tasks to specialist agents and tracks their results." },
+        { "node": "worker.moment-finder", "note": "The moment finder proposes interesting segments with timestamps and reasons." },
+        { "node": "external.gemini", "note": "The model helps interpret approved video and audio; it cannot approve rights or publish." },
+        { "node": "worker.captions", "note": "The caption agent creates timed draft subtitles and flags uncertain words." },
+        { "node": "worker.safety", "note": "The safety reviewer flags possible violence, language, spoilers, and private information." },
+        { "node": "worker.editing", "note": "The editing tools cut and crop the chosen segment and add the draft captions." },
+        { "node": "external.ffmpeg", "note": "The proposed media tool performs deterministic cutting and vertical framing." },
+        { "node": "worker.quality", "note": "Automated checks catch broken files, missing captions, duplicates, and incomplete review details." },
+        { "node": "external.cloudflare-stream", "note": "A review rendition is prepared for the editor; it is not public yet." },
+        { "node": "web.admin", "note": "An editor checks the rights, context, captions, framing, and warnings before deciding whether to publish." },
+        { "node": "worker.promotion", "note": "After approval, the promotion agent can prepare social drafts for a person to review and publish manually." }
       ]
     },
     {
@@ -154,7 +233,7 @@
     { "node": "web.pages", "title": "Start with the viewer", "note": "This is the public site: the feed, clip pages, search, topics, streamer profiles, and account routes." },
     { "node": "web.components", "title": "See what viewers use", "note": "These shared parts provide the player, captions, age warning, reports, and review controls." },
     { "node": "web.admin", "title": "Follow editorial review", "note": "Every generated clip remains a draft until an editor has checked it." },
-    { "node": "worker", "title": "Follow clip preparation", "note": "Authorized source videos are transcribed and turned into suggestions, not published automatically." },
+    { "node": "worker", "title": "Meet the clip agents", "note": "A permission gate, moment finder, caption agent, safety reviewer, editing tools, and quality checks work under one orchestrator; a person makes the publishing decision." },
     { "node": "external.cloudflare-stream", "title": "See video delivery", "note": "A managed service is proposed to prepare and stream video without running video servers." },
     { "node": "external.supabase-db", "title": "See saved records", "note": "The proposed database holds catalogue, permission, account, and report records." }
   ]

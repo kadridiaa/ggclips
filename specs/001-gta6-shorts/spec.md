@@ -1,4 +1,4 @@
-# Feature Specification: GGClips — clips gaming autorisés
+	# Feature Specification: GGClips — clips gaming autorisés
 
 **Feature Branch**: `001-gta6-shorts`
 
