@@ -56,6 +56,30 @@
         <p class="empty-state" id="empty-state" hidden>Aucun clip ne correspond à ta recherche. Essaie un autre mot.</p>
         <footer class="page-footer"><span>© GGCLIPS — Prototype de démonstration</span><span>Clips et créateurs fictifs · Aucun stream réel</span></footer>
       </main>
+      <section class="clip-viewer" id="clip-viewer" aria-label="Viewer de clip" aria-hidden="true" hidden>
+        <header class="viewer-topbar">
+          <button class="back-button" id="back-to-feed" type="button"><span aria-hidden="true">←</span> Retour au feed</button>
+          <span class="viewer-demo-label">APERÇU FICTIF</span>
+        </header>
+        <div class="viewer-layout">
+          <div class="viewer-stage">
+            <div class="viewer-art clip-art" id="viewer-art" aria-hidden="true"><span class="art-glow"></span><span class="art-silhouette"></span></div>
+            <div class="viewer-stage-note"><span class="demo-badge">✦ DÉMO FICTIVE</span><span id="viewer-duration" class="duration"></span></div>
+            <div class="viewer-play-mark" aria-hidden="true">▶</div>
+            <p class="viewer-scene" id="viewer-scene"></p>
+            <p class="viewer-no-video">Aucune vidéo réelle n’est chargée</p>
+          </div>
+          <div class="viewer-details">
+            <span class="eyebrow accent">CLIP À LA UNE</span>
+            <h2 id="viewer-title"></h2>
+            <div class="viewer-streamer"><span class="avatar" id="viewer-avatar"></span><div><strong id="viewer-creator"></strong><span>Streamer fictif</span></div></div>
+            <div class="viewer-stats"><div><strong id="viewer-views"></strong><span>vues</span></div><div><strong id="viewer-likes"></strong><span>likes fictifs</span></div></div>
+            <div class="viewer-hashtags" id="viewer-tags" aria-label="Hashtags"></div>
+            <button class="report-button" id="report-clip" type="button"><span aria-hidden="true">⚑</span> Signaler ce clip</button>
+            <p class="report-note">Le signalement est désactivé dans ce prototype.</p>
+          </div>
+        </div>
+      </section>
     </div>
 
     <dialog class="age-dialog" id="age-dialog" aria-labelledby="age-title">

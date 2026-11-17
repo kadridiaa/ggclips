@@ -11,6 +11,7 @@ const grid = document.querySelector('#clip-grid');
 const search = document.querySelector('#search');
 const emptyState = document.querySelector('#empty-state');
 const toast = document.querySelector('#toast');
+const viewer = document.querySelector('#clip-viewer');
 let activeFilter = 'Tout';
 let toastTimer;
 
@@ -65,7 +66,7 @@ grid.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-action]');
   if (!button) return;
   const clip = clips.find((item) => item.id === Number(button.closest('[data-clip]').dataset.clip));
-  if (button.dataset.action === 'preview') showToast(`Aperçu de démonstration — « ${clip.title} ». Aucune vidéo réelle n’est chargée.`);
+  if (button.dataset.action === 'preview') openViewer(clip);
   if (button.dataset.action === 'like') {
     button.classList.toggle('liked');
     button.textContent = button.classList.contains('liked') ? `♥ ${compactViews(clip.id)}` : `♡ ${compactViews(clip.id)}`;
@@ -76,6 +77,43 @@ grid.addEventListener('click', async (event) => {
     try { await navigator.clipboard.writeText(url); showToast('Lien de démonstration copié.'); }
     catch { showToast(`Lien de démonstration : ${url}`); }
   }
+});
+
+grid.addEventListener('click', (event) => {
+  if (event.target.closest('button')) return;
+  const card = event.target.closest('[data-clip]');
+  if (!card) return;
+  openViewer(clips.find((clip) => clip.id === Number(card.dataset.clip)));
+});
+
+function openViewer(clip) {
+  document.querySelector('#viewer-art').className = `viewer-art clip-art ${clip.art}`;
+  document.querySelector('#viewer-duration').textContent = clip.duration;
+  document.querySelector('#viewer-scene').textContent = clip.scene;
+  document.querySelector('#viewer-title').textContent = clip.title;
+  document.querySelector('#viewer-creator').textContent = clip.creator;
+  document.querySelector('#viewer-views').textContent = clip.views;
+  document.querySelector('#viewer-likes').textContent = compactViews(clip.id);
+  const avatar = document.querySelector('#viewer-avatar');
+  avatar.textContent = clip.initial;
+  avatar.style.setProperty('--avatar', avatarColor(clip.id));
+  document.querySelector('#viewer-tags').innerHTML = clip.tags.map((tag) => `<span class="clip-tag">#${tag.toLocaleLowerCase('fr').replaceAll(' ', '')}</span>`).join('');
+  viewer.hidden = false;
+  viewer.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('viewer-open');
+  document.querySelector('#back-to-feed').focus();
+}
+
+function closeViewer() {
+  viewer.hidden = true;
+  viewer.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('viewer-open');
+}
+
+document.querySelector('#back-to-feed').addEventListener('click', closeViewer);
+document.querySelector('#report-clip').addEventListener('click', () => showToast('Le signalement n’est pas activé dans ce prototype.'));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !viewer.hidden) closeViewer();
 });
 
 const ageDialog = document.querySelector('#age-dialog');
