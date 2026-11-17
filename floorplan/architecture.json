@@ -1,0 +1,161 @@
+{
+  "$schema": "floorplan/architecture@1",
+  "project": {
+    "name": "GGClips",
+    "summary": "A proposed mobile-first clip site for adult GTA 6 fans, starting with a small group of authorized streamer partners. AI helps prepare clips, but a human checks rights and quality before anything is published.",
+    "entrypoints": [
+      "web/app/page.tsx",
+      "web/app/clips/[slug]/page.tsx",
+      "web/app/admin/review/page.tsx"
+    ]
+  },
+  "audience": "everyone",
+  "nodes": [
+    {
+      "id": "web",
+      "label": "Website",
+      "kind": "ui",
+      "summary": "The public clip experience and the private tools editors use to review content.",
+      "paths": ["web/**"]
+    },
+    {
+      "id": "web.pages",
+      "parent": "web",
+      "label": "Pages and journeys",
+      "kind": "feature",
+      "summary": "The pages for discovering clips, viewing streamers, reporting content, and managing accounts.",
+      "paths": ["web/app/page.tsx", "web/app/clips/**", "web/app/search/**", "web/app/topics/**", "web/app/streamers/**", "web/app/sign-in/**", "web/app/account/**", "web/app/report/**"]
+    },
+    {
+      "id": "web.admin",
+      "parent": "web",
+      "label": "Editor workspace",
+      "kind": "feature",
+      "summary": "Private review pages where editors approve clip drafts and act on reports.",
+      "paths": ["web/app/admin/**"]
+    },
+    {
+      "id": "web.api",
+      "parent": "web",
+      "label": "Site requests",
+      "kind": "service",
+      "summary": "The site's own routes for public catalogue data and protected editor actions.",
+      "paths": ["web/app/api/**"]
+    },
+    {
+      "id": "web.components",
+      "parent": "web",
+      "label": "Shared page parts",
+      "kind": "library",
+      "summary": "Reusable video, warning, account, report, and review controls.",
+      "paths": ["web/components/**"]
+    },
+    {
+      "id": "web.lib",
+      "parent": "web",
+      "label": "Site connections",
+      "kind": "library",
+      "summary": "Shared calls to site data, editor access checks, and visitor privacy choices.",
+      "paths": ["web/lib/**"]
+    },
+    {
+      "id": "worker",
+      "label": "Clip preparation",
+      "kind": "worker",
+      "summary": "Background work that turns authorized source videos into drafts for human review.",
+      "paths": ["worker/**"]
+    },
+    {
+      "id": "external.supabase-db",
+      "label": "Supabase database and accounts",
+      "kind": "external",
+      "summary": "Proposed managed storage for catalogue records, permissions, reports, and editor accounts.",
+      "tags": ["proposed"]
+    },
+    {
+      "id": "external.supabase-storage",
+      "label": "Supabase source storage",
+      "kind": "external",
+      "summary": "Proposed private storage for partner-provided source files and permission records.",
+      "tags": ["proposed"]
+    },
+    {
+      "id": "external.cloudflare-stream",
+      "label": "Managed video delivery",
+      "kind": "external",
+      "summary": "Proposed service for preparing video renditions and delivering approved clips to viewers.",
+      "tags": ["proposed"]
+    },
+    {
+      "id": "external.gemini",
+      "label": "Video analysis model",
+      "kind": "external",
+      "summary": "Proposed paid model service that suggests moments and timestamps from authorized videos.",
+      "tags": ["proposed"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "web.api",
+      "to": "worker",
+      "kind": "queue",
+      "label": "authorized source queued",
+      "description": "Registering an approved partner source starts preparation work; the resulting clip stays a draft until an editor approves it."
+    },
+    {
+      "from": "web.admin",
+      "to": "web.api",
+      "kind": "http",
+      "label": "editor review actions",
+      "description": "Editors use protected site routes to approve, reject, or suspend content."
+    }
+  ],
+  "flows": [
+    {
+      "id": "discover-and-watch",
+      "title": "Find and watch a clip",
+      "description": "A visitor sees the age notice, finds an approved clip, and watches it with captions.",
+      "steps": [
+        { "node": "web.pages", "note": "The visitor opens the clip feed and acknowledges the adult-content notice." },
+        { "node": "web.api", "note": "The site asks for clips that are approved and publicly available." },
+        { "node": "external.supabase-db", "note": "Only published catalogue entries are returned." },
+        { "node": "external.cloudflare-stream", "note": "The video service delivers the clip at a suitable size for the device." },
+        { "node": "web.components", "note": "The player shows controls, captions, streamer credit, and a report link." }
+      ]
+    },
+    {
+      "id": "prepare-authorized-clip",
+      "title": "Prepare an authorized clip",
+      "description": "A partner source becomes a draft, is checked by a person, and is published only after approval.",
+      "steps": [
+        { "node": "web.admin", "note": "An editor registers a partner source and its permission evidence." },
+        { "node": "web.api", "note": "The protected route records the source and queues a preparation job." },
+        { "node": "external.supabase-storage", "note": "The source file remains in private storage." },
+        { "node": "worker", "note": "The worker transcribes, suggests moments, and prepares a review draft." },
+        { "node": "external.gemini", "note": "The model proposes possible moments; it does not decide rights or publish." },
+        { "node": "external.cloudflare-stream", "note": "A draft rendition is prepared for the editor to inspect." },
+        { "node": "web.admin", "note": "An editor checks context, rights, captions, framing, and content before approval." }
+      ]
+    },
+    {
+      "id": "report-and-remove",
+      "title": "Report and remove a clip",
+      "description": "A visitor reports a concern and an editor can suspend the clip while reviewing it.",
+      "steps": [
+        { "node": "web.pages", "note": "The visitor opens the report form from a clip." },
+        { "node": "web.api", "note": "The site records the report and applies spam protections." },
+        { "node": "external.supabase-db", "note": "The report and moderation history are stored for review." },
+        { "node": "web.admin", "note": "An editor reviews the case and records the decision." },
+        { "node": "web.api", "note": "The takedown action removes the clip from public listing and playback." }
+      ]
+    }
+  ],
+  "tour": [
+    { "node": "web.pages", "title": "Start with the viewer", "note": "This is the public site: the feed, clip pages, search, topics, streamer profiles, and account routes." },
+    { "node": "web.components", "title": "See what viewers use", "note": "These shared parts provide the player, captions, age warning, reports, and review controls." },
+    { "node": "web.admin", "title": "Follow editorial review", "note": "Every generated clip remains a draft until an editor has checked it." },
+    { "node": "worker", "title": "Follow clip preparation", "note": "Authorized source videos are transcribed and turned into suggestions, not published automatically." },
+    { "node": "external.cloudflare-stream", "title": "See video delivery", "note": "A managed service is proposed to prepare and stream video without running video servers." },
+    { "node": "external.supabase-db", "title": "See saved records", "note": "The proposed database holds catalogue, permission, account, and report records." }
+  ]
+}

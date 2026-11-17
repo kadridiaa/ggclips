@@ -1,0 +1,7 @@
+# Keep the editable blueprint and shareable map in Git.
+# Leave generated internals, cache files, and the raw machine-specific map out.
+*
+!.gitignore
+!plan.json
+!architecture.json
+!ggclips-map.html

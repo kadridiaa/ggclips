@@ -1,0 +1,91 @@
+{
+  "$schema": "floorplan/plan@1",
+  "source": "specs/001-gta6-shorts/spec.md",
+  "stack": [
+    "Next.js mobile-first website and server routes",
+    "Supabase Postgres and managed authentication",
+    "Cloudflare Stream for approved clip video delivery",
+    "A small background worker for clip preparation",
+    "Gemini API paid tier for assisted video analysis"
+  ],
+  "assumptions": [
+    "French is the first interface language; English follows after the pilot.",
+    "The pilot catalogue is public after an age and content warning; public sign-up and members-only clips are not assumed in the first release.",
+    "Only a project editor can submit or approve media; visitors can browse and submit a rate-limited report without an account.",
+    "Partners supply source files through a documented, approved route; no platform scraping or automatic VOD downloading is planned.",
+    "The worker suggests clips and prepares drafts, but a human approves every publication.",
+    "Gemini is a provisional paid-tier choice; partner footage is never sent to a free tier. Model quality, data terms, and cost must be validated before use.",
+    "A managed video provider is proposed to avoid operating transcoding and delivery servers; costs and EU data-processing terms need review.",
+    "The map describes a possible architecture, not existing code or a committed technology decision."
+  ],
+  "questions": [
+    {
+      "question": "Will the MVP include public accounts and members-only clips, or stay public after the age warning?",
+      "about": ["web.pages.account", "web.pages.sign-in", "GET /api/access/clip/:id"]
+    },
+    {
+      "question": "What exact partner-approved route will provide video files, and what separate game/music rights clearance is required before processing?",
+      "about": ["POST /api/admin/sources", "worker.clip-preparation", "external.cloudflare-stream"]
+    },
+    {
+      "question": "Should English subtitles and pages be included in the first public pilot, or added after French validation?",
+      "about": ["web.pages.home", "web.pages.clip", "worker.clip-preparation"]
+    }
+  ],
+  "files": [
+    { "path": "web/app/page.tsx", "name": "Clip feed", "description": "Shows the approved clip selection, age warning, and entry points to search and topics.", "screen": "/", "uses": ["web/components/clip-card.tsx", "web/components/age-gate.tsx", "web/lib/api.ts"], "calls": ["GET /api/clips"] },
+    { "path": "web/app/clips/[slug]/page.tsx", "name": "Clip viewer", "description": "Plays one approved vertical clip with captions, context, streamer credit, and reporting access.", "screen": "/clips/:slug", "uses": ["web/components/video-player.tsx", "web/components/report-link.tsx", "web/lib/api.ts"], "calls": ["GET /api/clips/:slug"] },
+    { "path": "web/app/search/page.tsx", "name": "Clip search", "description": "Finds published clips by title, streamer, and topic.", "screen": "/search", "uses": ["web/lib/api.ts"], "calls": ["GET /api/search"] },
+    { "path": "web/app/topics/[slug]/page.tsx", "name": "Topic page", "description": "Lists clips filed under one approved topic.", "screen": "/topics/:slug", "uses": ["web/components/clip-card.tsx", "web/lib/api.ts"], "calls": ["GET /api/topics/:slug/clips"] },
+    { "path": "web/app/streamers/[slug]/page.tsx", "name": "Streamer profile", "description": "Shows a partner-approved profile and their public clips.", "screen": "/streamers/:slug", "uses": ["web/components/clip-card.tsx", "web/lib/api.ts"], "calls": ["GET /api/streamers/:slug"] },
+    { "path": "web/app/sign-in/page.tsx", "name": "Sign-in page", "description": "Provides account entry only if the access model approved for launch requires accounts.", "screen": "/sign-in", "uses": ["web/components/auth-panel.tsx"] },
+    { "path": "web/app/account/page.tsx", "name": "Account settings", "description": "Shows account data and a way to request account closure if accounts are included.", "screen": "/account", "uses": ["web/components/auth-panel.tsx"] },
+    { "path": "web/app/report/[clipId]/page.tsx", "name": "Report a clip", "description": "Lets a visitor send a rights, privacy, or content report about a clip.", "screen": "/report/:clipId", "uses": ["web/components/report-form.tsx", "web/lib/api.ts"], "calls": ["POST /api/reports"] },
+    { "path": "web/app/admin/review/page.tsx", "name": "Clip review desk", "description": "Lets editors inspect source permissions, generated drafts, captions, warnings, and approve or reject clips.", "screen": "/admin/review", "uses": ["web/components/review-queue.tsx", "web/lib/api.ts"], "calls": ["GET /api/admin/review", "POST /api/admin/clips/:id/approve", "POST /api/admin/clips/:id/reject"] },
+    { "path": "web/app/admin/reports/page.tsx", "name": "Report review desk", "description": "Lets editors suspend clips, record decisions, and respond to reports.", "screen": "/admin/reports", "uses": ["web/components/report-queue.tsx", "web/lib/api.ts"], "calls": ["GET /api/admin/reports", "POST /api/admin/clips/:id/takedown"] },
+    { "path": "web/components/age-gate.tsx", "name": "Age and content notice", "description": "Displays the adult-audience warning before a visitor enters the clip experience." },
+    { "path": "web/components/clip-card.tsx", "name": "Clip preview card", "description": "Shows a lightweight preview, streamer name, topic, and content notices." },
+    { "path": "web/components/video-player.tsx", "name": "Vertical video player", "description": "Loads a suitable video rendition and exposes playback and caption controls." },
+    { "path": "web/components/report-link.tsx", "name": "Report entry point", "description": "Keeps the reporting action available from each published clip." },
+    { "path": "web/components/report-form.tsx", "name": "Report form", "description": "Collects the clip reference, report reason, and optional reply contact." },
+    { "path": "web/components/review-queue.tsx", "name": "Draft review queue", "description": "Presents pending clip drafts and the checks required before publication." },
+    { "path": "web/components/report-queue.tsx", "name": "Report queue", "description": "Presents incoming reports and the actions available to an editor." },
+    { "path": "web/components/auth-panel.tsx", "name": "Account panel", "description": "Provides account controls only if accounts are included in the approved launch scope." },
+    { "path": "web/lib/api.ts", "name": "Site data access", "description": "Connects public pages and editor screens to the site's own data routes." },
+    { "path": "web/lib/session.ts", "name": "Editor access check", "description": "Restricts editor screens and actions to approved project operators." },
+    { "path": "web/app/api/clips/route.ts", "name": "List approved clips", "description": "Returns the public feed of clips that are approved and available.", "calls": [], "data": ["external.supabase-db"] },
+    { "path": "web/app/api/clips/[slug]/route.ts", "name": "Read a clip", "description": "Returns public details and playback information for one available clip.", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/search/route.ts", "name": "Search clips", "description": "Searches the public catalogue by title, streamer, or topic.", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/topics/[slug]/clips/route.ts", "name": "List topic clips", "description": "Returns available clips for a topic.", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/streamers/[slug]/route.ts", "name": "Read streamer profile", "description": "Returns approved public profile information and associated clips.", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/reports/route.ts", "name": "Submit a report", "description": "Records a visitor report and applies abuse limits before accepting it.", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/admin/sources/route.ts", "name": "Register partner source", "description": "Records an editor-submitted source and its authorization evidence reference.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "web/app/api/admin/review/route.ts", "name": "List pending drafts", "description": "Returns pending clip drafts and their review information to editors.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/admin/clips/[id]/approve/route.ts", "name": "Approve a clip", "description": "Publishes a reviewed draft only after required permission and quality checks are recorded.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/admin/clips/[id]/reject/route.ts", "name": "Reject a draft", "description": "Marks a draft as rejected and records the editor's reason.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/admin/reports/route.ts", "name": "List reports", "description": "Returns open reports to approved editors.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/admin/clips/[id]/takedown/route.ts", "name": "Suspend a clip", "description": "Removes a clip from public surfaces and records the takedown decision.", "access": "signed-in", "who": "approved editors", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/access/clip/[id]/route.ts", "name": "Check clip access", "description": "Applies the access rule selected for clips if member-only content is included.", "access": "signed-in", "who": "the requesting member", "data": ["external.supabase-db"] },
+    { "path": "web/app/api/account/route.ts", "name": "Manage account request", "description": "Records an account closure or data request for the account owner.", "access": "signed-in", "who": "the account owner", "data": ["external.supabase-db"] },
+    { "path": "worker/src/clip-preparation.ts", "name": "Prepare clip drafts", "description": "Transcribes an authorized source, asks the model for candidate moments, and prepares draft renditions for human review.", "services": ["external.gemini", "external.cloudflare-stream"], "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/quality-check.ts", "name": "Check draft quality", "description": "Checks media files, duration, captions, duplicate candidates, and required review fields before an editor sees a draft.", "data": ["external.supabase-db", "external.supabase-storage"] },
+    { "path": "worker/src/jobs.ts", "name": "Background job runner", "description": "Retries failed preparation work safely and prevents the same source from publishing twice.", "uses": ["worker/src/clip-preparation.ts", "worker/src/quality-check.ts"], "services": ["external.supabase-db"] },
+    { "path": "web/lib/cookies.ts", "name": "Privacy choice handling", "description": "Stores the visitor's consent choices and gates non-essential embeds or trackers." }
+  ],
+  "endpoints": [
+    { "method": "GET", "path": "/api/clips", "file": "web/app/api/clips/route.ts", "name": "List approved clips", "description": "Returns published clips available to the public feed.", "access": "public" },
+    { "method": "GET", "path": "/api/clips/:slug", "file": "web/app/api/clips/[slug]/route.ts", "name": "Read a clip", "description": "Returns public information and the playback reference for one clip.", "access": "public" },
+    { "method": "GET", "path": "/api/search", "file": "web/app/api/search/route.ts", "name": "Search clips", "description": "Finds public clips by title, streamer, and topic.", "access": "public" },
+    { "method": "GET", "path": "/api/topics/:slug/clips", "file": "web/app/api/topics/[slug]/clips/route.ts", "name": "List topic clips", "description": "Returns public clips assigned to a topic.", "access": "public" },
+    { "method": "GET", "path": "/api/streamers/:slug", "file": "web/app/api/streamers/[slug]/route.ts", "name": "Read streamer profile", "description": "Returns a public partner profile and its available clips.", "access": "public" },
+    { "method": "POST", "path": "/api/reports", "file": "web/app/api/reports/route.ts", "name": "Submit a report", "description": "Accepts a report for review with abuse protection.", "access": "public", "publicBecause": "Visitors must be able to report harmful or unauthorized content without an account; apply rate limits, input validation, and spam controls." },
+    { "method": "POST", "path": "/api/admin/sources", "file": "web/app/api/admin/sources/route.ts", "name": "Register partner source", "description": "Registers a source and the evidence needed before processing.", "access": "signed-in", "who": "approved editors" },
+    { "method": "GET", "path": "/api/admin/review", "file": "web/app/api/admin/review/route.ts", "name": "List pending drafts", "description": "Lists clip drafts awaiting human review.", "access": "signed-in", "who": "approved editors" },
+    { "method": "POST", "path": "/api/admin/clips/:id/approve", "file": "web/app/api/admin/clips/[id]/approve/route.ts", "name": "Approve a clip", "description": "Makes an eligible, reviewed clip public.", "access": "signed-in", "who": "approved editors" },
+    { "method": "POST", "path": "/api/admin/clips/:id/reject", "file": "web/app/api/admin/clips/[id]/reject/route.ts", "name": "Reject a draft", "description": "Rejects a draft and records why it cannot be published.", "access": "signed-in", "who": "approved editors" },
+    { "method": "GET", "path": "/api/admin/reports", "file": "web/app/api/admin/reports/route.ts", "name": "List reports", "description": "Lists reports for editorial review.", "access": "signed-in", "who": "approved editors" },
+    { "method": "POST", "path": "/api/admin/clips/:id/takedown", "file": "web/app/api/admin/clips/[id]/takedown/route.ts", "name": "Suspend a clip", "description": "Hides a clip from public pages and records the action.", "access": "signed-in", "who": "approved editors" },
+    { "method": "GET", "path": "/api/access/clip/:id", "file": "web/app/api/access/clip/[id]/route.ts", "name": "Check clip access", "description": "Checks the chosen member access policy when restricted clips exist.", "access": "signed-in", "who": "the requesting member" },
+    { "method": "DELETE", "path": "/api/account", "file": "web/app/api/account/route.ts", "name": "Request account closure", "description": "Records the account owner's closure request and starts the applicable data handling process.", "access": "signed-in", "who": "the account owner" }
+  ]
+}
