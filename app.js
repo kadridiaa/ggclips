@@ -7,6 +7,12 @@ const clips = [
   { id: 6, title: 'La sortie la plus chaotique', creator: 'Rexouille', initial: 'R', category: 'Action', tags: ['Action', 'Chaos'], time: 'Il y a 3 h', duration: '0:27', views: '3,8 k', art: 'art-6', scene: 'TOUT SOUS CONTRÔLE.' },
 ];
 
+const drafts = [
+  { id: 7, title: 'La fuite improvisée du siècle', creator: 'Noxx', initial: 'N', category: 'Drôle', tags: ['Drôle', 'Évasion'], time: 'À l’instant', duration: '0:21', views: '0', art: 'art-2', scene: 'PLAN B : COURIR.', reason: 'Le chat s’emballe et la scène se comprend sans contexte supplémentaire.' },
+  { id: 8, title: 'Un détour qui tourne mal', creator: 'MilaRush', initial: 'M', category: 'Fails', tags: ['Fails', 'Course'], time: 'À l’instant', duration: '0:17', views: '0', art: 'art-5', scene: 'MAUVAISE SORTIE.', reason: 'Chute comique courte, avec une réaction claire du streamer.' },
+  { id: 9, title: 'Sauvetage à la dernière seconde', creator: 'KyoLive', initial: 'K', category: 'Moment clutch', tags: ['Moment clutch', 'Sauvetage'], time: 'À l’instant', duration: '0:29', views: '0', art: 'art-4', scene: 'JUSTE À TEMPS.', reason: 'Moment de tension et résolution immédiate, adapté au format court.' },
+];
+
 const grid = document.querySelector('#clip-grid');
 const search = document.querySelector('#search');
 const emptyState = document.querySelector('#empty-state');
@@ -14,6 +20,7 @@ const toast = document.querySelector('#toast');
 const viewer = document.querySelector('#clip-viewer');
 const profile = document.querySelector('#streamer-profile');
 const loginPage = document.querySelector('#login-page');
+const reviewDesk = document.querySelector('#review-desk');
 const platformByStreamer = { Noxx: 'Twitch', MilaRush: 'Kick', KyoLive: 'Twitch', LunaByte: 'Kick', SoraGG: 'Twitch', Rexouille: 'Kick' };
 const reservedClipId = 6;
 let isDemoLoggedIn = false;
@@ -50,8 +57,22 @@ function renderClips() {
   document.querySelector('#clip-count').textContent = String(results.length).padStart(2, '0');
 }
 
-function avatarColor(id) { return ['#d9b0ff', '#9be2d8', '#ffc27e', '#b6e985', '#f4a9c9', '#f0ca80'][id - 1]; }
-function compactViews(id) { return ['1.2k', '864', '720', '593', '411', '328'][id - 1]; }
+function renderReviewDesk() {
+  document.querySelector('#draft-list').innerHTML = drafts.map((draft) => `
+    <article class="draft-card" data-draft="${draft.id}">
+      <div class="draft-topline"><span class="draft-status"><i></i> BROUILLON</span><span class="draft-agent">✦ PROPOSÉ PAR L’AGENT</span></div>
+      <h3>${draft.title}</h3>
+      <div class="draft-facts"><span><small>STREAMER</small><strong>${draft.creator}</strong></span><span><small>DURÉE</small><strong>${draft.duration}</strong></span></div>
+      <div class="draft-reason"><span>RAISON PROPOSÉE</span><p>${draft.reason}</p></div>
+      <div class="draft-actions"><button class="draft-approve" type="button" data-decision="approve" data-draft-id="${draft.id}">✓ Valider</button><button class="draft-reject" type="button" data-decision="reject" data-draft-id="${draft.id}">× Refuser</button></div>
+    </article>`).join('');
+  document.querySelector('#review-empty').hidden = drafts.length > 0;
+  document.querySelector('#review-count').textContent = drafts.length;
+  document.querySelector('#review-count').hidden = drafts.length === 0;
+}
+
+function avatarColor(id) { return ['#d9b0ff', '#9be2d8', '#ffc27e', '#b6e985', '#f4a9c9', '#f0ca80'][(id - 1) % 6]; }
+function compactViews(id) { return ['1.2k', '864', '720', '593', '411', '328'][id - 1] || '0'; }
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -177,6 +198,26 @@ function closeLogin() {
   document.body.classList.remove('viewer-open');
 }
 
+function openReviewDesk() {
+  viewer.hidden = true;
+  viewer.setAttribute('aria-hidden', 'true');
+  profile.hidden = true;
+  profile.setAttribute('aria-hidden', 'true');
+  loginPage.hidden = true;
+  loginPage.setAttribute('aria-hidden', 'true');
+  reviewDesk.hidden = false;
+  reviewDesk.setAttribute('aria-hidden', 'false');
+  renderReviewDesk();
+  document.body.classList.add('viewer-open');
+  document.querySelector('#review-back').focus();
+}
+
+function closeReviewDesk() {
+  reviewDesk.hidden = true;
+  reviewDesk.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('viewer-open');
+}
+
 function updateAuthControls() {
   document.querySelector('#login-open').hidden = isDemoLoggedIn;
   document.querySelector('#user-label').hidden = !isDemoLoggedIn;
@@ -191,6 +232,26 @@ document.querySelector('#profile-back').addEventListener('click', () => {
 });
 document.querySelector('#login-open').addEventListener('click', openLogin);
 document.querySelector('#login-back').addEventListener('click', closeLogin);
+document.querySelector('#review-open').addEventListener('click', openReviewDesk);
+document.querySelector('#review-back').addEventListener('click', closeReviewDesk);
+document.querySelector('#draft-list').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-decision]');
+  if (!button) return;
+  const draftIndex = drafts.findIndex((draft) => draft.id === Number(button.dataset.draftId));
+  if (draftIndex < 0) return;
+  const [draft] = drafts.splice(draftIndex, 1);
+  if (button.dataset.decision === 'approve') {
+    clips.push({ ...draft, time: 'À l’instant' });
+    activeFilter = 'Tout';
+    search.value = '';
+    document.querySelectorAll('.filter-chip').forEach((chip, index) => chip.classList.toggle('selected', index === 0));
+    renderClips();
+    showToast(`« ${draft.title} » ajouté au feed démo.`);
+  } else {
+    showToast(`« ${draft.title} » refusé et retiré des brouillons.`);
+  }
+  renderReviewDesk();
+});
 document.querySelector('#demo-login-form').addEventListener('submit', (event) => {
   event.preventDefault();
   isDemoLoggedIn = true;
@@ -224,6 +285,7 @@ document.addEventListener('keydown', (event) => {
     document.body.classList.remove('viewer-open');
   }
   if (event.key === 'Escape' && !loginPage.hidden) closeLogin();
+  if (event.key === 'Escape' && !reviewDesk.hidden) closeReviewDesk();
 });
 
 const ageDialog = document.querySelector('#age-dialog');
@@ -243,4 +305,5 @@ document.addEventListener('keydown', (event) => {
 });
 
 renderClips();
+renderReviewDesk();
 updateAuthControls();

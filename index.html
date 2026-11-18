@@ -34,6 +34,7 @@
           <div class="topbar-title"><span class="eyebrow">LE MEILLEUR DU LIVE, EN COURT</span><h1>Le feed</h1></div>
           <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Chercher un clip, un streamer…" aria-label="Chercher un clip ou streamer" /><kbd>/</kbd></label>
           <div class="auth-controls">
+            <button class="review-open-button" id="review-open" type="button">Validation <span class="review-count" id="review-count">3</span></button>
             <button class="login-open-button" id="login-open" type="button">Se connecter</button>
             <span class="user-label" id="user-label" hidden>Démo</span>
             <button class="logout-button" id="logout-button" type="button" hidden>Se déconnecter</button>
@@ -118,6 +119,18 @@
             </form>
             <small>Démo locale uniquement · aucun compte ni identifiant n’est enregistré ou envoyé.</small>
           </div>
+        </div>
+      </section>
+      <section class="review-desk" id="review-desk" aria-label="Bureau de validation démo" aria-hidden="true" hidden>
+        <header class="viewer-topbar">
+          <button class="back-button" id="review-back" type="button"><span aria-hidden="true">←</span> Retour au feed</button>
+          <span class="viewer-demo-label">ESPACE DE DÉMONSTRATION</span>
+        </header>
+        <div class="review-content">
+          <div class="review-heading"><div><span class="eyebrow accent">MODÉRATION / FILE D’ATTENTE</span><h2>Bureau de validation</h2><p>Examine les propositions fictives avant leur ajout au feed.</p></div><span class="review-agent-badge">✦ AGENT · DÉMO</span></div>
+          <div class="draft-list" id="draft-list"></div>
+          <div class="review-empty" id="review-empty" hidden><span>✓</span><h3>Tout est traité.</h3><p>Il n’y a plus de brouillons dans la file de démonstration.</p></div>
+          <p class="review-disclaimer">Aucune vidéo réelle ni publication externe · Les décisions sont locales et temporaires.</p>
         </div>
       </section>
     </div>
