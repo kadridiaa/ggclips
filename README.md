@@ -1,108 +1,26 @@
-<<<<<<< HEAD
-GGClips
-GTA 6 shorts from Twitch and Kick streams, cut by an AI agent.
-Status: plan only. No code yet.
-This repo contains the project framing, built with GitHub Spec Kit.
-The project in one sentence
-GGClips turns the best moments from GTA 6 streams into short vertical clips, with subtitles and branding, published on a fast, mobile-first website.
-Sources: 3 to 5 partner streamers, with written agreement only. No content is collected without authorization.
-Game: Grand Theft Auto VI (GTA 6) — released November 19, 2026 on PS5 and Xbox Series X|S, no official PC date.
-Audience: GTA 6 fans and stream viewers, 18+ (PEGI 18 game).
-Language: French first, English next (to be confirmed).
-What's in this repo
-.specify/memory/constitution.md — project principles
-specs/001-gta6-shorts/spec.md — what the site must do
-specs/001-gta6-shorts/plan.md — technical architecture and plan
-specs/001-gta6-shorts/tasks.md — task list, in order
-specs/001-gta6-shorts/research.md — rights check (Rockstar, Twitch, Kick, Reddit, X, Instagram, TikTok)
-AGENTS.md — rules for AI agents working on this repo
-How the plan was made
-With GitHub Spec Kit, in Codex:
-=======
 # GGClips
 
-GTA 6 shorts from Twitch and Kick streams, cut by an AI agent.
+GGClips is a mobile-friendly, front-end MVP demo for discovering short gaming clips. It is a static site built with HTML, CSS, and JavaScript and has no package installation step.
 
-> **Status: plan only.** No code yet.
-> This repo contains the project framing, built with GitHub Spec Kit.
+## Run locally
 
-## The project in one sentence
+From the project directory, start Python's built-in HTTP server:
 
-GGClips turns the best moments from GTA 6 streams into short vertical clips, with subtitles and branding, published on a fast, mobile-first website.
-
-- **Sources:** 3 to 5 partner streamers, with written agreement only. No content is collected without authorization.
-- **Game:** Grand Theft Auto VI (GTA 6) — released November 19, 2026 on PS5 and Xbox Series X|S, no official PC date.
-- **Audience:** GTA 6 fans and stream viewers, 18+ (PEGI 18 game).
-- **Language:** French first, English next (to be confirmed).
-
-## What's in this repo
-
-- `.specify/memory/constitution.md` — project principles
-- `specs/001-gta6-shorts/spec.md` — what the site must do
-- `specs/001-gta6-shorts/plan.md` — technical architecture and plan
-- `specs/001-gta6-shorts/tasks.md` — task list, in order
-- `specs/001-gta6-shorts/research.md` — rights check (Rockstar, Twitch, Kick, Reddit, X, Instagram, TikTok)
-- `AGENTS.md` — rules for AI agents working on this repo
-
-## How the plan was made
-
-With [GitHub Spec Kit](https://github.com/github/spec-kit), in Codex:
-
-```text
->>>>>>> 888385b (adding readme for roadmap)
-$speckit-constitution
-$speckit-specify
-$speckit-plan
-$speckit-tasks
-<<<<<<< HEAD
-We stop before $speckit-implement until the plan is validated.
-Rights — important
-No stream is downloaded, transformed, or republished without authorization.
-A streamer's authorization does not necessarily cover the rights to the game, music, or images.
-Reporting and takedown are planned from the MVP.
-No Rockstar / GTA 6 logos, images, or brand assets are used in this repo without verification.
-The exact rules are in specs/001-gta6-shorts/research.md, with official sources. Anything that cannot be verified is marked as uncertain there.
-MVP / Later
-MVP
-Later
-Clip feed, vertical player, search, categories
-Personalized recommendations
-Streamer profiles, sign-up / sign-in
-Comments, likes, follow
-Human review of clips before publishing
-Automatic posting to social networks
-Reporting and takedown
-Subscription / monetization (to be decided, not assumed)
-Setup (when coding starts)
-Not yet. The MVP is not built.
-License
-=======
+```powershell
+python -m http.server 8000
 ```
 
-We stop before `$speckit-implement` until the plan is validated.
+Open [http://localhost:8000](http://localhost:8000) in your browser. Stop the server with `Ctrl+C` in the terminal.
 
-## Rights — important
+## Demo features
 
-- No stream is downloaded, transformed, or republished without authorization.
-- A streamer's authorization does not necessarily cover the rights to the game, music, or images.
-- Reporting and takedown are planned from the MVP.
-- No Rockstar / GTA 6 logos, images, or brand assets are used in this repo without verification.
-- The exact rules are in `specs/001-gta6-shorts/research.md`, with official sources. Anything that cannot be verified is marked as uncertain there.
+- **Clip feed:** browse six sample clips, search by title or streamer, and filter by category. One clip is marked as reserved for members.
+- **Clip viewer:** open a vertical clip view with its title, streamer, fictional view and like counts, hashtags, and a report button.
+- **Streamer profiles:** open a fictional streamer's profile to see their fictional platform and clips.
+- **Demo sign-in:** use any valid-looking email and a non-empty fictional password. The site displays the name “Démo” and unlocks the reserved clip. The form is reset after sign-in; the demo sign-in state exists only in memory until the page is reloaded.
+- **Review desk:** inspect three sample drafts and approve or reject them. Approved drafts appear in the feed for the current session; rejected drafts leave the queue.
+- **Agent simulation:** click **Simuler l’agent** in the review desk to add a prepared fictional draft attributed to Moment finder. Each suggestion includes a fictional timestamp and a proposed reason, and can then be approved or rejected like any other draft.
 
-## MVP / Later
+## Demo only
 
-| MVP | Later |
-| --- | --- |
-| Clip feed, vertical player, search, categories | Personalized recommendations |
-| Streamer profiles, sign-up / sign-in | Comments, likes, follow |
-| Human review of clips before publishing | Automatic posting to social networks |
-| Reporting and takedown | Subscription / monetization (to be decided, not assumed) |
-
-## Setup (when coding starts)
-
-_Not yet. The MVP is not built._
-
-## License
-
->>>>>>> 888385b (adding readme for roadmap)
-MIT
+All clips, streamers, platforms, accounts, statistics, timestamps, and draft proposals are fictional. No real video or stream is processed. Nothing is published to any external service. Sign-in, clip approvals, and rejections are local demonstration interactions only; their state is not saved to a backend.
