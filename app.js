@@ -13,7 +13,10 @@ const emptyState = document.querySelector('#empty-state');
 const toast = document.querySelector('#toast');
 const viewer = document.querySelector('#clip-viewer');
 const profile = document.querySelector('#streamer-profile');
+const loginPage = document.querySelector('#login-page');
 const platformByStreamer = { Noxx: 'Twitch', MilaRush: 'Kick', KyoLive: 'Twitch', LunaByte: 'Kick', SoraGG: 'Twitch', Rexouille: 'Kick' };
+const reservedClipId = 6;
+let isDemoLoggedIn = false;
 let activeFilter = 'Tout';
 let toastTimer;
 
@@ -28,9 +31,10 @@ function renderClips() {
     <article class="clip-card" data-clip="${clip.id}">
       <div class="clip-visual">
         <div class="clip-art ${clip.art}" aria-hidden="true"><span class="art-glow"></span><span class="art-silhouette"></span></div>
-        <div class="visual-top"><span class="demo-badge">✦ DÉMO FICTIVE</span><span class="duration">${clip.duration}</span></div>
+        <div class="visual-top"><span class="demo-badge">${clip.id === reservedClipId ? '✦ RÉSERVÉ AUX MEMBRES' : '✦ DÉMO FICTIVE'}</span><span class="duration">${clip.duration}</span></div>
         <button class="play-button" type="button" aria-label="Aperçu fictif : ${clip.title}" data-action="preview">▶</button>
         <div class="visual-caption">${clip.scene}</div>
+        ${clip.id === reservedClipId && !isDemoLoggedIn ? '<button class="member-lock" type="button" data-action="unlock"><span>▣</span><strong>Réservé aux membres</strong><small>Connecte-toi pour voir ce clip</small></button>' : ''}
       </div>
       <div class="clip-meta">
         <span class="avatar" style="--avatar:${avatarColor(clip.id)}" aria-hidden="true">${clip.initial}</span>
@@ -68,6 +72,10 @@ grid.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-action]');
   if (!button) return;
   const clip = clips.find((item) => item.id === Number(button.closest('[data-clip]').dataset.clip));
+  if (clip.id === reservedClipId && !isDemoLoggedIn) {
+    openLogin();
+    return;
+  }
   if (button.dataset.action === 'preview') openViewer(clip);
   if (button.dataset.action === 'like') {
     button.classList.toggle('liked');
@@ -95,6 +103,10 @@ grid.addEventListener('click', (event) => {
 });
 
 function openViewer(clip) {
+  if (clip.id === reservedClipId && !isDemoLoggedIn) {
+    openLogin();
+    return;
+  }
   document.querySelector('#viewer-art').className = `viewer-art clip-art ${clip.art}`;
   document.querySelector('#viewer-duration').textContent = clip.duration;
   document.querySelector('#viewer-scene').textContent = clip.scene;
@@ -112,6 +124,8 @@ function openViewer(clip) {
   viewer.setAttribute('aria-hidden', 'false');
   profile.hidden = true;
   profile.setAttribute('aria-hidden', 'true');
+  loginPage.hidden = true;
+  loginPage.setAttribute('aria-hidden', 'true');
   document.body.classList.add('viewer-open');
   document.querySelector('#back-to-feed').focus();
 }
@@ -146,11 +160,55 @@ function closeViewer() {
   document.body.classList.remove('viewer-open');
 }
 
+function openLogin() {
+  viewer.hidden = true;
+  viewer.setAttribute('aria-hidden', 'true');
+  profile.hidden = true;
+  profile.setAttribute('aria-hidden', 'true');
+  loginPage.hidden = false;
+  loginPage.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('viewer-open');
+  document.querySelector('#demo-email').focus();
+}
+
+function closeLogin() {
+  loginPage.hidden = true;
+  loginPage.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('viewer-open');
+}
+
+function updateAuthControls() {
+  document.querySelector('#login-open').hidden = isDemoLoggedIn;
+  document.querySelector('#user-label').hidden = !isDemoLoggedIn;
+  document.querySelector('#logout-button').hidden = !isDemoLoggedIn;
+}
+
 document.querySelector('#back-to-feed').addEventListener('click', closeViewer);
 document.querySelector('#profile-back').addEventListener('click', () => {
   profile.hidden = true;
   profile.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('viewer-open');
+});
+document.querySelector('#login-open').addEventListener('click', openLogin);
+document.querySelector('#login-back').addEventListener('click', closeLogin);
+document.querySelector('#demo-login-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  isDemoLoggedIn = true;
+  event.currentTarget.reset();
+  updateAuthControls();
+  renderClips();
+  closeLogin();
+  showToast('Connexion démo activée. Le clip réservé est débloqué.');
+});
+document.querySelector('#logout-button').addEventListener('click', () => {
+  isDemoLoggedIn = false;
+  updateAuthControls();
+  renderClips();
+  closeViewer();
+  profile.hidden = true;
+  profile.setAttribute('aria-hidden', 'true');
+  closeLogin();
+  showToast('Déconnexion démo effectuée. Le clip est de nouveau verrouillé.');
 });
 document.querySelector('#viewer-creator').addEventListener('click', (event) => openProfile(event.currentTarget.dataset.streamer));
 document.querySelector('#profile-clips').addEventListener('click', (event) => {
@@ -165,6 +223,7 @@ document.addEventListener('keydown', (event) => {
     profile.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('viewer-open');
   }
+  if (event.key === 'Escape' && !loginPage.hidden) closeLogin();
 });
 
 const ageDialog = document.querySelector('#age-dialog');
@@ -184,3 +243,4 @@ document.addEventListener('keydown', (event) => {
 });
 
 renderClips();
+updateAuthControls();
