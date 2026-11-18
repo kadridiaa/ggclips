@@ -8,10 +8,17 @@ const clips = [
 ];
 
 const drafts = [
-  { id: 7, title: 'La fuite improvisée du siècle', creator: 'Noxx', initial: 'N', category: 'Drôle', tags: ['Drôle', 'Évasion'], time: 'À l’instant', duration: '0:21', views: '0', art: 'art-2', scene: 'PLAN B : COURIR.', reason: 'Le chat s’emballe et la scène se comprend sans contexte supplémentaire.' },
-  { id: 8, title: 'Un détour qui tourne mal', creator: 'MilaRush', initial: 'M', category: 'Fails', tags: ['Fails', 'Course'], time: 'À l’instant', duration: '0:17', views: '0', art: 'art-5', scene: 'MAUVAISE SORTIE.', reason: 'Chute comique courte, avec une réaction claire du streamer.' },
-  { id: 9, title: 'Sauvetage à la dernière seconde', creator: 'KyoLive', initial: 'K', category: 'Moment clutch', tags: ['Moment clutch', 'Sauvetage'], time: 'À l’instant', duration: '0:29', views: '0', art: 'art-4', scene: 'JUSTE À TEMPS.', reason: 'Moment de tension et résolution immédiate, adapté au format court.' },
+  { id: 7, title: 'La fuite improvisée du siècle', creator: 'Noxx', initial: 'N', category: 'Drôle', tags: ['Drôle', 'Évasion'], time: 'À l’instant', timestamp: '00:12:08', duration: '0:21', views: '0', art: 'art-2', scene: 'PLAN B : COURIR.', reason: 'Le chat s’emballe et la scène se comprend sans contexte supplémentaire.' },
+  { id: 8, title: 'Un détour qui tourne mal', creator: 'MilaRush', initial: 'M', category: 'Fails', tags: ['Fails', 'Course'], time: 'À l’instant', timestamp: '00:38:41', duration: '0:17', views: '0', art: 'art-5', scene: 'MAUVAISE SORTIE.', reason: 'Chute comique courte, avec une réaction claire du streamer.' },
+  { id: 9, title: 'Sauvetage à la dernière seconde', creator: 'KyoLive', initial: 'K', category: 'Moment clutch', tags: ['Moment clutch', 'Sauvetage'], time: 'À l’instant', timestamp: '01:04:16', duration: '0:29', views: '0', art: 'art-4', scene: 'JUSTE À TEMPS.', reason: 'Moment de tension et résolution immédiate, adapté au format court.' },
 ];
+
+const simulatedSuggestions = [
+  { title: 'Un saut un peu trop optimiste', creator: 'KyoLive', initial: 'K', category: 'Fails', tags: ['Fails', 'Saut'], time: 'À l’instant', timestamp: '00:42:18', duration: '0:23', views: '0', art: 'art-3', scene: 'C’ÉTAIT PRESQUE ÇA.', reason: 'La tentative inattendue et sa chute forment un gag visuel facile à suivre.' },
+  { title: 'Le détour qui sauve la run', creator: 'LunaByte', initial: 'L', category: 'Moment clutch', tags: ['Moment clutch', 'Course'], time: 'À l’instant', timestamp: '01:06:03', duration: '0:19', views: '0', art: 'art-4', scene: 'BONNE DÉCISION.', reason: 'Le changement de stratégie mène à une résolution rapide et satisfaisante.' },
+  { title: 'Quand le plan part en freestyle', creator: 'SoraGG', initial: 'S', category: 'Drôle', tags: ['Drôle', 'Chaos'], time: 'À l’instant', timestamp: '00:18:51', duration: '0:26', views: '0', art: 'art-1', scene: 'PLUS RIEN NE VA.', reason: 'Plusieurs réactions rapprochées donnent un moment rythmé, adapté au format clip.' },
+];
+let nextSimulatedDraftId = 10;
 
 const grid = document.querySelector('#clip-grid');
 const search = document.querySelector('#search');
@@ -60,9 +67,9 @@ function renderClips() {
 function renderReviewDesk() {
   document.querySelector('#draft-list').innerHTML = drafts.map((draft) => `
     <article class="draft-card" data-draft="${draft.id}">
-      <div class="draft-topline"><span class="draft-status"><i></i> BROUILLON</span><span class="draft-agent">✦ PROPOSÉ PAR L’AGENT</span></div>
+      <div class="draft-topline"><span class="draft-status"><i></i> BROUILLON</span><span class="draft-agent">✦ MOMENT FINDER</span></div>
       <h3>${draft.title}</h3>
-      <div class="draft-facts"><span><small>STREAMER</small><strong>${draft.creator}</strong></span><span><small>DURÉE</small><strong>${draft.duration}</strong></span></div>
+      <div class="draft-facts"><span><small>STREAMER</small><strong>${draft.creator}</strong></span><span><small>DURÉE</small><strong>${draft.duration}</strong></span><span><small>TIMECODE FICTIF</small><strong>${draft.timestamp || '00:00:00'}</strong></span></div>
       <div class="draft-reason"><span>RAISON PROPOSÉE</span><p>${draft.reason}</p></div>
       <div class="draft-actions"><button class="draft-approve" type="button" data-decision="approve" data-draft-id="${draft.id}">✓ Valider</button><button class="draft-reject" type="button" data-decision="reject" data-draft-id="${draft.id}">× Refuser</button></div>
     </article>`).join('');
@@ -234,6 +241,17 @@ document.querySelector('#login-open').addEventListener('click', openLogin);
 document.querySelector('#login-back').addEventListener('click', closeLogin);
 document.querySelector('#review-open').addEventListener('click', openReviewDesk);
 document.querySelector('#review-back').addEventListener('click', closeReviewDesk);
+document.querySelector('#simulate-agent').addEventListener('click', () => {
+  const suggestion = simulatedSuggestions.shift();
+  if (!suggestion) {
+    showToast('Toutes les propositions fictives de cette session ont été utilisées.');
+    return;
+  }
+  drafts.push({ id: nextSimulatedDraftId, ...suggestion });
+  nextSimulatedDraftId += 1;
+  renderReviewDesk();
+  showToast('Moment finder a proposé un nouveau brouillon fictif.');
+});
 document.querySelector('#draft-list').addEventListener('click', (event) => {
   const button = event.target.closest('[data-decision]');
   if (!button) return;
